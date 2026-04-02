@@ -1,0 +1,28 @@
+name: "Phase 8 — QA Gate"
+
+on:
+  repository_dispatch:
+    types: [phase_08_qa_gate]
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Run QA Gate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.PIPELINE_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          python -c "
+          from phases.08_qa_gate.compliance import run_qa_gate
+          import json
+          payload = json.loads('${{ toJSON(github.event.client_payload) }}')
+          run_qa_gate(payload['video_id'], payload['slug'], payload)
+          "

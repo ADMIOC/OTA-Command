@@ -21,8 +21,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.logging.logger import get_logger
 from core.dispatch.events import Phase, create_event, EventStatus
-from phases.02_rights_gate.checker import check_rights
-from phases.03_extraction.extractor import run_extraction
+
+# Dynamic imports to avoid Python 3.10 numeric-prefix parsing issue
+import importlib
+rights_mod = importlib.import_module("phases.02_rights_gate.checker")
+check_rights = rights_mod.check_rights
+
+extract_mod = importlib.import_module("phases.03_extraction.extractor")
+run_extraction = extract_mod.run_extraction
 
 log = get_logger("runner")
 

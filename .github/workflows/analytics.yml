@@ -1,0 +1,34 @@
+name: "Phase 10 — Analytics"
+
+on:
+  repository_dispatch:
+    types: [phase_10_analytics]
+  schedule:
+    - cron: "0 8 * * 1"    # Weekly report every Monday 8 AM UTC
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Run Analytics
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.PIPELINE_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          python -c "
+          from phases.10_analytics.tracker import run_analytics
+          import json
+          payload = json.loads('${{ toJSON(github.event.client_payload) }}') if '${{ github.event_name }}' == 'repository_dispatch' else {}
+          video_id = payload.get('video_id', 'weekly_report')
+          slug = payload.get('slug', 'weekly')
+          from phases.10_analytics.tracker import run_analytics
+          run_analytics(video_id, slug, payload)
+          "

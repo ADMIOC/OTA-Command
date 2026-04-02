@@ -1,0 +1,28 @@
+name: "Phase 4 — Storage & Sync"
+
+on:
+  repository_dispatch:
+    types: [phase_04_storage]
+
+jobs:
+  store:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Run Storage
+        env:
+          GITHUB_TOKEN: ${{ secrets.PIPELINE_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          python -c "
+          from phases.04_storage.store import run_storage
+          import json
+          payload = json.loads('${{ toJSON(github.event.client_payload) }}')
+          run_storage(payload['video_id'], payload['slug'], payload.get('extraction_files', {}), payload)
+          "
