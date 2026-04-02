@@ -21,7 +21,7 @@ DLQ_DIR.mkdir(parents=True, exist_ok=True)
 _failure_counts = {}
 
 # Notion Pipeline Log database ID (data_source_id)
-NOTION_PIPELINE_DB = "40c5f2be-0b41-4113-b012-b185c455280a"
+NOTION_PIPELINE_DB = "860db451-abc5-4ca2-a3c2-689844a3905b"
 
 
 def retry_with_backoff(phase_name: str):
@@ -154,7 +154,7 @@ def _notion_create_page(properties: dict, content: str = "") -> dict:
         }
 
     body = {
-        "parent": {"database_id": "1373bc60-a288-42cb-9e3b-1611d0c609fe"},
+        "parent": {"database_id": "317e5d69-d8fd-471c-a76f-a6bd74871eca"},
         "properties": notion_props,
     }
 

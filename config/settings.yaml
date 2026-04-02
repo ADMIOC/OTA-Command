@@ -129,8 +129,8 @@ analytics:
 notifications:
   notion:
     enabled: true
-    pipeline_log_db: "1373bc60-a288-42cb-9e3b-1611d0c609fe"
-    pipeline_log_datasource: "40c5f2be-0b41-4113-b012-b185c455280a"
+    pipeline_log_db: "317e5d69-d8fd-471c-a76f-a6bd74871eca"
+    pipeline_log_datasource: "860db451-abc5-4ca2-a3c2-689844a3905b"
     notify_on:
       - discovery_new_video
       - approval_needed
