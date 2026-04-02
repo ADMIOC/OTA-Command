@@ -1,0 +1,5 @@
+# OTA Command — Python Dependencies
+anthropic>=0.40.0
+requests>=2.31.0
+pyyaml>=6.0
+yt-dlp>=2024.0

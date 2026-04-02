@@ -1,0 +1,44 @@
+# ============================================================
+# OTA Command — Phase 2: Rights & Relevance Gate (Event-Driven)
+# Triggered when Phase 1 (Discovery) queues a video.
+# ============================================================
+
+name: "Phase 2 — Rights Gate"
+
+on:
+  repository_dispatch:
+    types: [phase_02_rights_gate]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Rights Check
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.PIPELINE_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          python -c "
+          from phases.02_rights_gate.checker import check_rights
+          import json
+
+          payload = json.loads('${{ toJSON(github.event.client_payload) }}')
+          video_id = payload.get('video_id', '')
+
+          result = check_rights(video_id, payload)
+          print(json.dumps(result, indent=2, default=str) if result else 'BLOCKED')
+          "

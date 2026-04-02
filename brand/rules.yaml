@@ -1,0 +1,105 @@
+# ============================================================
+# OTA Command — Brand Rules Engine
+# Used by Phase 8 QA Gate to enforce naming and compliance.
+# A Brand Collab Production. All rights reserved 2026.
+# ============================================================
+
+footer: "A Brand Collab Production. All rights reserved 2026."
+
+# -----------------------------------------------------------
+# Brand Names — Correct spellings & common mistakes
+# -----------------------------------------------------------
+brands:
+  - name: "Own The Algorithm"
+    url: "ownthealgo.com"
+    wrong: ["Own the Algo", "OwnTheAlgorithm", "Own the algorithm"]
+    topics: ["ai", "algorithm", "automation", "general"]
+
+  - name: "Own The Algo Podcast"
+    url: "podcast.ownthealgo.com"
+    wrong: ["OTA Podcast", "Own the Algorithm Podcast"]
+    topics: ["podcast", "episodes", "interviews"]
+
+  - name: "Urban Fusion Ai"
+    url: "UrbanFusion.ai"
+    wrong: ["Urban Fusion AI", "UrbanFusion AI", "Urban Fusion ai", "Urbanfusion"]
+    note: "Capital A, lowercase i — always"
+    topics: ["urban", "city", "smart city", "infrastructure"]
+
+  - name: "Capital Recovery Services"
+    short: "CRS"
+    url: "crshcs.com"
+    wrong: ["Capital Recovery", "capital recovery services", "CRSHCS"]
+    note: "Always use CRS as abbreviation, never Capital Recovery alone"
+    topics: ["finance", "recovery", "debt", "collections"]
+
+  - name: "TrustBid"
+    url: "TrustBid.App"
+    wrong: ["Trust Bid", "Trustbid", "TRUSTBID", "Trust-Bid"]
+    topics: ["bidding", "auction", "trust", "procurement"]
+
+  - name: "WYR Detail"
+    url: "WYRDetail.com"
+    wrong: ["Wire Detail", "WIRE Detail", "Wyr Detail", "WYR detail"]
+    note: "WYR — never Wire or WIRE"
+    topics: ["detail", "automotive", "cleaning"]
+
+  - name: "FlipLess App"
+    url: "FlipLess.App"
+    wrong: ["Flipless", "FLipLess", "Flip Less", "flipless"]
+    note: "FlipLess — capital F, capital L"
+    topics: ["flipping", "real estate", "property"]
+
+  - name: "WYR Podcast"
+    url: "podcast.wyrios.com"
+    wrong: ["Wire Podcast", "WIRE Podcast", "WYR podcast"]
+    topics: ["podcast", "logistics", "intermodal"]
+
+  - name: "The Algo Academy"
+    url: "thealgoacademy.com"
+    wrong: ["Algo Academy", "AlgoAcademy", "The Algorithm Academy"]
+    topics: ["education", "courses", "training", "academy"]
+
+  - name: "AP2 Academy"
+    url: "ap2.academy"
+    wrong: ["AP2 academy", "Ap2 Academy", "AP-2 Academy"]
+    topics: ["education", "training"]
+
+  - name: "Ai Payment Cloud"
+    url: "aipayment.cloud"
+    wrong: ["AI Payment Cloud", "Ai payment cloud", "AiPayment"]
+    note: "Capital A, lowercase i — same convention as Urban Fusion Ai"
+    topics: ["payments", "fintech", "cloud", "processing"]
+
+  - name: "WYR Intermodal OS"
+    url: "wyrios.com"
+    wrong: ["Wire Intermodal", "WIRE OS", "WYR OS", "WYRIOS"]
+    note: "WYR — never Wire or WIRE"
+    topics: ["logistics", "intermodal", "shipping", "freight", "containers"]
+
+  - name: "The VFO"
+    url: "vfo.app"
+    wrong: ["VFO", "the VFO", "The Vfo"]
+    note: "The VFO — never VFO alone"
+    topics: ["virtual", "family", "office"]
+
+# -----------------------------------------------------------
+# Content Routing Rules
+# -----------------------------------------------------------
+routing:
+  default_brand: "Own The Algorithm"
+  strategy: "topic_match"
+  # When a video's extracted topics match a brand's topic list,
+  # content is routed to that brand's channels and properties.
+  # If no match, routes to the default brand.
+
+# -----------------------------------------------------------
+# Visual Brand
+# -----------------------------------------------------------
+visual:
+  primary_color: "#7b2fff"
+  secondary_color: "#00d4ff"
+  accent_color: "#ff2d87"
+  font_heading: "Inter"
+  font_body: "Inter"
+  logo_path: "brand/assets/ota_logo.png"

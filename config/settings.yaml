@@ -1,0 +1,148 @@
+# ============================================================
+# OTA Command — Global Configuration
+# A Brand Collab Production. All rights reserved 2026.
+# ============================================================
+
+project:
+  name: "OTA Command"
+  version: "1.0.0"
+  repo: "ADMIOC/OTA-Command"
+
+# -----------------------------------------------------------
+# Phase 1: Discovery Bot
+# -----------------------------------------------------------
+discovery:
+  poll_interval_minutes: 15
+  max_queue_size: 50
+  auto_approve_threshold: 0.85    # Score above this → auto-pass
+  manual_review_threshold: 0.50   # Score below this → auto-reject
+  # Between 0.50-0.85 → Slack notification for human review
+
+  channels: []
+    # Add YouTube channel IDs to monitor:
+    # - UC_x5XG1OV2P6uZZ5FSM9Ttw   # Example: Google Developers
+    # - UCVHFbqXqoYvEWM1Ddxl0QDg   # Example: Another channel
+
+  keywords:
+    - "artificial intelligence"
+    - "machine learning"
+    - "automation"
+    - "algorithm"
+    - "ai agents"
+
+  filters:
+    min_duration_seconds: 120       # Skip videos under 2 min
+    max_duration_seconds: 14400     # Skip videos over 4 hours
+    min_views: 0                    # 0 = no minimum
+    language: "en"                  # Primary language filter
+    exclude_shorts: false           # Include YouTube Shorts
+
+# -----------------------------------------------------------
+# Phase 2: Rights & Relevance Gate
+# -----------------------------------------------------------
+rights_gate:
+  block_on_copyright_claim: true
+  allowed_licenses:
+    - "creativeCommon"
+    - "youtube"                     # Standard YouTube license
+  require_captions: false           # Allow Whisper fallback
+
+# -----------------------------------------------------------
+# Phase 3: Extraction
+# -----------------------------------------------------------
+extraction:
+  model: "claude-sonnet-4-20250514"
+  max_transcript_tokens: 100000
+  whisper_fallback: true            # Use Whisper if no captions
+  output_formats:
+    - extraction_analysis
+    - notebooklm_source
+    - skill_file
+
+# -----------------------------------------------------------
+# Phase 6: Content Multiplication
+# -----------------------------------------------------------
+multiplication:
+  generate_social_copy: true
+  generate_blog_post: true
+  generate_newsletter: true
+  generate_thumbnails: true
+  generate_quote_cards: true
+  max_quotes_per_video: 8
+  platforms:
+    - instagram
+    - tiktok
+    - facebook
+    - x_twitter
+    - linkedin
+    - youtube_shorts
+
+# -----------------------------------------------------------
+# Phase 7: Production
+# -----------------------------------------------------------
+production:
+  elevenlabs:
+    voice_id: ""                    # Set your cloned voice ID
+    model: "eleven_multilingual_v2"
+    stability: 0.5
+    similarity_boost: 0.8
+
+  descript:
+    auto_captions: true
+    caption_style: "default"
+
+  clip_cutter:
+    formats:
+      - { name: "short", duration: 15, aspect: "9:16" }
+      - { name: "medium", duration: 30, aspect: "9:16" }
+      - { name: "standard", duration: 60, aspect: "16:9" }
+      - { name: "square", duration: 30, aspect: "1:1" }
+
+# -----------------------------------------------------------
+# Phase 9: Distribution
+# -----------------------------------------------------------
+distribution:
+  restream:
+    simultaneous_platforms: true
+    schedule_ahead_hours: 24
+
+  optimal_post_times:
+    instagram: "11:00"
+    tiktok: "19:00"
+    facebook: "09:00"
+    x_twitter: "08:00"
+    linkedin: "07:30"
+    youtube_shorts: "14:00"
+
+# -----------------------------------------------------------
+# Phase 10: Analytics
+# -----------------------------------------------------------
+analytics:
+  report_frequency: "weekly"
+  report_day: "monday"
+  track_utm: true
+  feedback_loop_enabled: true
+
+# -----------------------------------------------------------
+# Notifications
+# -----------------------------------------------------------
+notifications:
+  slack:
+    enabled: true
+    webhook_url: ""                 # Set in secrets
+    channel: "#ota-command"
+    notify_on:
+      - discovery_new_video
+      - approval_needed
+      - extraction_complete
+      - distribution_complete
+      - error_critical
+
+# -----------------------------------------------------------
+# Error Handling
+# -----------------------------------------------------------
+errors:
+  max_retries: 3
+  retry_backoff_seconds: [30, 120, 600]   # 30s, 2min, 10min
+  dead_letter_queue: true
+  alert_on_failure_count: 3

@@ -1,0 +1,35 @@
+# OTA Command — Git Ignore
+
+# Secrets — NEVER commit
+config/secrets.env
+*.env
+!*.env.example
+
+# Queue state (runtime data)
+queue/
+!queue/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Outputs (generated files — committed selectively)
+outputs/
+
+# Temp
+tmp/
+*.tmp

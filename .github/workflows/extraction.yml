@@ -1,0 +1,48 @@
+# ============================================================
+# OTA Command — Phase 3: Extraction Engine (Event-Driven)
+# Triggered when Phase 2 (Rights Gate) passes a video.
+# ============================================================
+
+name: "Phase 3 — Extraction"
+
+on:
+  repository_dispatch:
+    types: [phase_03_extraction]
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install yt-dlp
+
+      - name: Run Extraction
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.PIPELINE_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          python -c "
+          from phases.03_extraction.extractor import run_extraction
+          import json
+
+          payload = json.loads('${{ toJSON(github.event.client_payload) }}')
+          video_id = payload.get('video_id', '')
+          slug = payload.get('slug', '')
+          url = f'https://www.youtube.com/watch?v={video_id}'
+
+          result = run_extraction(url, video_id, slug, payload)
+          print(json.dumps(result, indent=2, default=str))
+          "

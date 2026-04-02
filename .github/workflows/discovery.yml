@@ -1,0 +1,37 @@
+# ============================================================
+# OTA Command — Phase 1: Discovery Bot (Scheduled)
+# Polls YouTube channels for new videos every 15 minutes.
+# ============================================================
+
+name: "Phase 1 — Discovery"
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"          # Every 15 minutes
+  workflow_dispatch:                  # Manual trigger
+  repository_dispatch:
+    types: [phase_01_discovery]
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Discovery
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.PIPELINE_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: python -m phases.01_discovery.monitor
