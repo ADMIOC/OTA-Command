@@ -23,11 +23,7 @@ class Phase(Enum):
     EXTRACTION = "03_extraction"
     STORAGE = "04_storage"
     NOTEBOOKLM = "05_notebooklm"
-    MULTIPLICATION = "06_multiplication"
-    PRODUCTION = "07_production"
-    QA_GATE = "08_qa_gate"
-    DISTRIBUTION = "09_distribution"
-    ANALYTICS = "10_analytics"
+    # Phases 06-10 handled by KNOCK OUT, ENCORE, FREQUENCY agents
 
 
 class EventStatus(Enum):
@@ -44,12 +40,7 @@ PHASE_ORDER = [
     Phase.RIGHTS_GATE,
     Phase.EXTRACTION,
     Phase.STORAGE,
-    Phase.NOTEBOOKLM,      # Manual gate — pauses here
-    Phase.MULTIPLICATION,
-    Phase.PRODUCTION,
-    Phase.QA_GATE,
-    Phase.DISTRIBUTION,
-    Phase.ANALYTICS,
+    Phase.NOTEBOOKLM,      # Terminal gate — hands off to agent ecosystem
 ]
 
 

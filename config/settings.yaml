@@ -60,68 +60,12 @@ extraction:
     - skill_file
 
 # -----------------------------------------------------------
-# Phase 6: Content Multiplication
+# Phases 06-10 owned by agent ecosystem:
+#   KNOCK OUT  → Content multiplication & brand-aware creation
+#   ENCORE     → Distribution planning & execution
+#   FREQUENCY  → Real-time social intelligence & trend detection
+#   Content Module → Approval governance layer
 # -----------------------------------------------------------
-multiplication:
-  generate_social_copy: true
-  generate_blog_post: true
-  generate_newsletter: true
-  generate_thumbnails: true
-  generate_quote_cards: true
-  max_quotes_per_video: 8
-  platforms:
-    - instagram
-    - tiktok
-    - facebook
-    - x_twitter
-    - linkedin
-    - youtube_shorts
-
-# -----------------------------------------------------------
-# Phase 7: Production
-# -----------------------------------------------------------
-production:
-  elevenlabs:
-    voice_id: ""                    # Set your cloned voice ID
-    model: "eleven_multilingual_v2"
-    stability: 0.5
-    similarity_boost: 0.8
-
-  descript:
-    auto_captions: true
-    caption_style: "default"
-
-  clip_cutter:
-    formats:
-      - { name: "short", duration: 15, aspect: "9:16" }
-      - { name: "medium", duration: 30, aspect: "9:16" }
-      - { name: "standard", duration: 60, aspect: "16:9" }
-      - { name: "square", duration: 30, aspect: "1:1" }
-
-# -----------------------------------------------------------
-# Phase 9: Distribution
-# -----------------------------------------------------------
-distribution:
-  restream:
-    simultaneous_platforms: true
-    schedule_ahead_hours: 24
-
-  optimal_post_times:
-    instagram: "11:00"
-    tiktok: "19:00"
-    facebook: "09:00"
-    x_twitter: "08:00"
-    linkedin: "07:30"
-    youtube_shorts: "14:00"
-
-# -----------------------------------------------------------
-# Phase 10: Analytics
-# -----------------------------------------------------------
-analytics:
-  report_frequency: "weekly"
-  report_day: "monday"
-  track_utm: true
-  feedback_loop_enabled: true
 
 # -----------------------------------------------------------
 # Notifications
@@ -135,7 +79,6 @@ notifications:
       - discovery_new_video
       - approval_needed
       - extraction_complete
-      - distribution_complete
       - error_critical
 
 # -----------------------------------------------------------

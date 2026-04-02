@@ -102,19 +102,7 @@ PHASE_MAP = {
     "04_storage_github": "04 Storage",
     "04_storage_drive": "04 Storage",
     "05_notebooklm": "05 NotebookLM",
-    "06_multiplication": "06 Multiplication",
-    "06_social_copy": "06 Multiplication",
-    "06_blog": "06 Multiplication",
-    "06_newsletter": "06 Multiplication",
-    "06_quotes": "06 Multiplication",
-    "06_thumbnails": "06 Multiplication",
-    "07_production": "07 Production",
-    "07_voiceover": "07 Production",
-    "07_video": "07 Production",
-    "07_clips": "07 Production",
-    "08_qa_gate": "08 QA Gate",
-    "09_distribution": "09 Distribution",
-    "10_analytics": "10 Analytics",
+    # Phases 06-10 owned by KNOCK OUT, ENCORE, FREQUENCY agents
 }
 
 
