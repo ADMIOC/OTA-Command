@@ -12,7 +12,7 @@ import requests
 
 from core.config import get_setting, get_secret
 from core.logging.logger import get_logger
-from core.errors.handler import retry_with_backoff, notify_slack
+from core.errors.handler import retry_with_backoff, notify_slack, notify
 from core.dispatch.events import emit_next_phase, Phase
 
 log = get_logger("09_distribution")
@@ -260,16 +260,30 @@ def run_distribution(video_id: str, slug: str, payload: dict) -> dict:
             slug=slug,
         )
 
-        notify_slack(
-            f":rocket: *Distribution scheduled* — {slug}\n"
-            f"Published to {len(auth.get('channels', []))} platforms",
+        notify(
+            event="Distribution scheduled",
+            phase="09_distribution",
+            status="Complete",
+            video_title=payload.get('title', slug),
+            slug=slug,
+            video_url=payload.get('url', ''),
+            asset_count=len(auth.get('channels', [])),
+            details=f"Published to {len(auth.get('channels', []))} platforms: {', '.join(auth.get('channels', []))}",
         )
 
         return {"distribution": summary, "event": event}
 
     except Exception as e:
         log.error(f"Distribution failed: {e}")
-        notify_slack(f":warning: Distribution error for {slug}: {e}")
+        notify(
+            event="Distribution error",
+            phase="09_distribution",
+            status="Error",
+            video_title=payload.get('title', slug),
+            slug=slug,
+            video_url=payload.get('url', ''),
+            details=f"Distribution error: {str(e)}",
+        )
         raise
 
 

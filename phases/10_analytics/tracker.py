@@ -13,7 +13,7 @@ import anthropic
 
 from core.config import get_setting, get_secret
 from core.logging.logger import get_logger
-from core.errors.handler import retry_with_backoff, notify_slack
+from core.errors.handler import retry_with_backoff, notify_slack, notify
 from core.dispatch.events import emit_next_phase, Phase
 
 log = get_logger("10_analytics")
@@ -333,10 +333,14 @@ def run_analytics(video_id: str, slug: str, payload: dict) -> dict:
         log.success(f"Analytics complete: {metrics['total_views']:,} views, ${revenue['total_revenue']:.2f} revenue")
 
         # Emit completion (no next phase, this is the final phase)
-        notify_slack(
-            f":chart_with_upwards_trend: *Analytics complete* — {slug}\n"
-            f"{metrics['total_views']:,} views | ${revenue['total_revenue']:.2f} revenue\n"
-            f"Engagement: {metrics.get('engagement_rate', 0):.1%} | ROAS: {revenue.get('roas', 0):.1f}x",
+        notify(
+            event="Analytics complete",
+            phase="10_analytics",
+            status="Complete",
+            video_title=payload.get('title', slug),
+            slug=slug,
+            video_url=payload.get('url', ''),
+            details=f"{metrics['total_views']:,} views | ${revenue['total_revenue']:.2f} revenue\nEngagement rate: {metrics.get('engagement_rate', 0):.1%}\nROAS: {revenue.get('roas', 0):.1f}x\nConversion rate: {revenue.get('conversion_rate', 0):.2%}",
         )
 
         return {
@@ -348,7 +352,15 @@ def run_analytics(video_id: str, slug: str, payload: dict) -> dict:
 
     except Exception as e:
         log.error(f"Analytics failed: {e}")
-        notify_slack(f":warning: Analytics error for {slug}: {e}")
+        notify(
+            event="Analytics error",
+            phase="10_analytics",
+            status="Error",
+            video_title=payload.get('title', slug),
+            slug=slug,
+            video_url=payload.get('url', ''),
+            details=f"Analytics error: {str(e)}",
+        )
         raise
 
 

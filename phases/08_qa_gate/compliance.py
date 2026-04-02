@@ -14,7 +14,7 @@ import yaml
 
 from core.config import get_setting, get_secret
 from core.logging.logger import get_logger
-from core.errors.handler import retry_with_backoff, notify_slack
+from core.errors.handler import retry_with_backoff, notify_slack, notify
 from core.dispatch.events import emit_next_phase, Phase
 
 log = get_logger("08_qa_gate")
@@ -329,9 +329,14 @@ def run_qa_gate(video_id: str, slug: str, payload: dict) -> dict:
         (slug_dir / "qa_summary.json").write_text(json.dumps(qa_summary, indent=2))
 
         if violations or broken_links:
-            notify_slack(
-                f":warning: QA issues for {slug}\n"
-                f"Violations: {len(violations)}, Broken links: {len(broken_links)}",
+            notify(
+                event="QA issues detected",
+                phase="08_qa_gate",
+                status="Needs Approval",
+                video_title=payload.get('title', slug),
+                slug=slug,
+                video_url=payload.get('url', ''),
+                details=f"Compliance violations: {len(violations)}\nBroken links: {len(broken_links)}\nCompliancescore: {compliance.get('compliance_score', 0)}/100",
             )
 
         log.success(f"QA complete: {qa_summary.get('qa_pass', False)}")
@@ -348,7 +353,15 @@ def run_qa_gate(video_id: str, slug: str, payload: dict) -> dict:
 
     except Exception as e:
         log.error(f"QA gate failed: {e}")
-        notify_slack(f":warning: QA gate error for {slug}: {e}")
+        notify(
+            event="QA gate error",
+            phase="08_qa_gate",
+            status="Error",
+            video_title=payload.get('title', slug),
+            slug=slug,
+            video_url=payload.get('url', ''),
+            details=f"QA gate error: {str(e)}",
+        )
         raise
 
 

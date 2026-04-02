@@ -127,10 +127,10 @@ analytics:
 # Notifications
 # -----------------------------------------------------------
 notifications:
-  slack:
+  notion:
     enabled: true
-    webhook_url: ""                 # Set in secrets
-    channel: "#ota-command"
+    pipeline_log_db: "1373bc60-a288-42cb-9e3b-1611d0c609fe"
+    pipeline_log_datasource: "40c5f2be-0b41-4113-b012-b185c455280a"
     notify_on:
       - discovery_new_video
       - approval_needed

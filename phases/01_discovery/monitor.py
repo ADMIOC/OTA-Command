@@ -23,7 +23,7 @@ import requests
 
 from core.config import get_setting, get_secret
 from core.logging.logger import get_logger
-from core.errors.handler import retry_with_backoff, notify_slack
+from core.errors.handler import retry_with_backoff, notify_slack, notify
 from core.dispatch.events import create_event, emit_next_phase, Phase, EventStatus
 
 log = get_logger("01_discovery")
@@ -280,13 +280,15 @@ def queue_video(video: dict, score: float) -> dict:
             slug=_make_slug(video["title"]),
         )
 
-        # Slack notification
-        notify_slack(
-            f"*New video needs review* (score: {score})\n"
-            f"*{video['title']}*\n"
-            f"{video['url']}\n"
-            f"Approve or reject in the queue.",
-            emoji=":eyes:",
+        # Notion notification
+        notify(
+            event="New video needs review",
+            phase="01_discovery",
+            status="Needs Approval",
+            video_title=video['title'],
+            slug=_make_slug(video["title"]),
+            video_url=video['url'],
+            details=f"Score: {score}\nChannel: {video.get('channel', 'Unknown')}\nApprove or reject in the queue.",
         )
         return event
 

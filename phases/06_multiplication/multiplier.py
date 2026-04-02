@@ -20,7 +20,7 @@ import anthropic
 
 from core.config import get_setting, get_secret
 from core.logging.logger import get_logger
-from core.errors.handler import retry_with_backoff, notify_slack
+from core.errors.handler import retry_with_backoff, notify_slack, notify
 from core.dispatch.events import emit_next_phase, Phase
 
 log = get_logger("06_multiplication")
@@ -423,10 +423,15 @@ def run_multiplication(video_id: str, slug: str, payload: dict) -> dict:
         slug=slug,
     )
 
-    notify_slack(
-        f":sparkles: *Content multiplied* — {title[:50]}\n"
-        f"{asset_count} assets generated from 1 video",
-        emoji="",
+    notify(
+        event="Content multiplied",
+        phase="06_multiplication",
+        status="Complete",
+        video_title=title,
+        slug=slug,
+        video_url=payload.get('url', ''),
+        asset_count=asset_count,
+        details=f"{asset_count} content assets generated from 1 video",
     )
 
     return {"assets": results, "count": asset_count, "event": event}

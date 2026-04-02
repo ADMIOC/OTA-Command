@@ -15,7 +15,7 @@ import anthropic
 
 from core.config import get_setting, get_secret
 from core.logging.logger import get_logger
-from core.errors.handler import retry_with_backoff, notify_slack
+from core.errors.handler import retry_with_backoff, notify_slack, notify
 from core.dispatch.events import emit_next_phase, Phase
 
 log = get_logger("07_production")
@@ -272,16 +272,30 @@ def run_production(video_id: str, slug: str, payload: dict) -> dict:
             slug=slug,
         )
 
-        notify_slack(
-            f":film_frames: *Production ready* — {slug}\n"
-            f"Video + {clips_result.get('total_clips', 0)} clips generated",
+        notify(
+            event="Production ready",
+            phase="07_production",
+            status="Complete",
+            video_title=payload.get('title', slug),
+            slug=slug,
+            video_url=payload.get('url', ''),
+            asset_count=clips_result.get('total_clips', 0),
+            details=f"Composed video + {clips_result.get('total_clips', 0)} clips ready for distribution",
         )
 
         return {"production": summary, "event": event}
 
     except Exception as e:
         log.error(f"Production failed: {e}")
-        notify_slack(f":warning: Production error for {slug}: {e}")
+        notify(
+            event="Production error",
+            phase="07_production",
+            status="Error",
+            video_title=payload.get('title', slug),
+            slug=slug,
+            video_url=payload.get('url', ''),
+            details=f"Production error: {str(e)}",
+        )
         raise
 
 

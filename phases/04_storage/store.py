@@ -19,7 +19,7 @@ import requests
 
 from core.config import get_setting, get_secret
 from core.logging.logger import get_logger
-from core.errors.handler import retry_with_backoff, notify_slack
+from core.errors.handler import retry_with_backoff, notify_slack, notify
 from core.dispatch.events import emit_next_phase, Phase
 
 log = get_logger("04_storage")
@@ -312,11 +312,15 @@ def run_storage(video_id: str, slug: str, files: dict, payload: dict) -> dict:
     payload["drive_sync"] = drive_result
 
     # 4. Notify
-    notify_slack(
-        f"*Extraction stored* — {payload.get('title', slug)}\n"
-        f"GitHub: {len(github_result)} files committed\n"
-        f"Drive: {drive_result.get('status', 'unknown')}",
-        emoji=":package:",
+    notify(
+        event="Extraction stored",
+        phase="04_storage",
+        status="Complete",
+        video_title=payload.get('title', slug),
+        slug=slug,
+        video_url=payload.get('url', ''),
+        asset_count=len(github_result),
+        details=f"GitHub: {len(github_result)} files committed\nDrive: {drive_result.get('status', 'unknown')}",
     )
 
     log.success(f"Storage complete: {len(github_result)} files on GitHub, Drive={drive_result.get('status')}")

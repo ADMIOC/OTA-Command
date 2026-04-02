@@ -31,7 +31,7 @@ def load_config(config_path: str = None) -> dict:
         "elevenlabs_api_key": os.getenv("ELEVENLABS_API_KEY", ""),
         "descript_api_key": os.getenv("DESCRIPT_API_KEY", ""),
         "restream_api_key": os.getenv("RESTREAM_API_KEY", ""),
-        "slack_webhook_url": os.getenv("SLACK_WEBHOOK_URL", ""),
+        "notion_api_key": os.getenv("NOTION_API_KEY", ""),
         "google_service_account": os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", ""),
     }
 

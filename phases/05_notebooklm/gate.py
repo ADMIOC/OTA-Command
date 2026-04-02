@@ -19,7 +19,7 @@ from pathlib import Path
 
 from core.config import get_setting
 from core.logging.logger import get_logger
-from core.errors.handler import notify_slack
+from core.errors.handler import notify_slack, notify
 from core.dispatch.events import emit_next_phase, Phase, create_event, EventStatus, update_event_status
 
 log = get_logger("05_notebooklm")
@@ -30,38 +30,45 @@ QUEUE_DIR = _ROOT / "queue"
 
 def send_notebooklm_instructions(slug: str, payload: dict):
     """
-    Send Slack notification with exact NotebookLM steps.
+    Create Notion page with exact NotebookLM steps.
     """
     title = payload.get("title", slug)
     drive_info = payload.get("drive_sync", {})
     web_link = drive_info.get("web_link", "")
     filename = drive_info.get("filename", f"{slug}_notebooklm_source.md")
 
-    instructions = (
-        f":clipboard: *NotebookLM — Action Required*\n\n"
-        f"*Video:* {title}\n"
-        f"*Slug:* `{slug}`\n"
-        f"*Source file:* `{filename}`\n"
+    # Format instructions as details for Notion page
+    instructions_text = (
+        f"**Video:** {title}\n\n"
+        f"**Slug:** {slug}\n\n"
+        f"**Source file:** {filename}\n\n"
     )
 
     if web_link:
-        instructions += f"*Drive link:* {web_link}\n"
+        instructions_text += f"**Drive link:** {web_link}\n\n"
 
-    instructions += (
-        f"\n*Steps:*\n"
+    instructions_text += (
+        f"**Steps:**\n\n"
         f"1. Go to notebooklm.google.com\n"
-        f"2. Click *+ New Notebook*\n"
-        f"3. *Add Source* → Google Drive → OTA-Pipeline → OTA-NotebookLM-Source\n"
-        f"4. Select: `{filename}`\n"
-        f"5. Studio panel → *Slides* → *Detailed Deck* → English → Default → *Generate*\n"
-        f"6. Save completed deck to *OTA-Pipeline → OTA-NotebookLM-Output* in Drive\n"
-        f"\n"
-        f"When done, signal completion:\n"
-        f"```python -m phases.05_notebooklm.gate --complete {slug}```\n"
+        f"2. Click + New Notebook\n"
+        f"3. Add Source → Google Drive → OTA-Pipeline → OTA-NotebookLM-Source\n"
+        f"4. Select: {filename}\n"
+        f"5. Studio panel → Slides → Detailed Deck → English → Default → Generate\n"
+        f"6. Save completed deck to OTA-Pipeline → OTA-NotebookLM-Output in Drive\n\n"
+        f"When done, signal completion with:\n"
+        f"`python -m phases.05_notebooklm.gate --complete {slug}`\n\n"
         f"Or push a file: `queue/05_complete_{slug}.json`"
     )
 
-    notify_slack(instructions, emoji="")
+    notify(
+        event="NotebookLM action required",
+        phase="05_notebooklm",
+        status="Needs Approval",
+        video_title=title,
+        slug=slug,
+        video_url=web_link,
+        details=instructions_text,
+    )
     log.info(f"NotebookLM instructions sent for {slug}")
 
 
@@ -104,9 +111,14 @@ def mark_complete(slug: str, payload: dict = None):
         slug=slug,
     )
 
-    notify_slack(
-        f":white_check_mark: *NotebookLM complete* — `{slug}`\n"
-        f"Pipeline resuming → Phase 6 (Content Multiplication)",
+    notify(
+        event="NotebookLM complete",
+        phase="05_notebooklm",
+        status="Complete",
+        video_title=payload.get("title", slug),
+        slug=slug,
+        video_url=payload.get("url", ""),
+        details="Pipeline resuming to Phase 6 (Content Multiplication)",
     )
 
     return event

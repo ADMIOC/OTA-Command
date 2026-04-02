@@ -1,6 +1,6 @@
 """
 OTA Command — Error Handling & Retry Engine
-Exponential backoff retries, dead-letter queue, Slack alerts.
+Exponential backoff retries, dead-letter queue, Notion alerts.
 """
 
 import json
@@ -19,6 +19,9 @@ DLQ_DIR.mkdir(parents=True, exist_ok=True)
 
 # Track consecutive failures per phase
 _failure_counts = {}
+
+# Notion Pipeline Log database ID (data_source_id)
+NOTION_PIPELINE_DB = "40c5f2be-0b41-4113-b012-b185c455280a"
 
 
 def retry_with_backoff(phase_name: str):
@@ -57,7 +60,7 @@ def retry_with_backoff(phase_name: str):
 
                         # Alert if threshold reached
                         if _failure_counts[phase_name] >= alert_threshold:
-                            _send_slack_alert(phase_name, last_error)
+                            _send_notion_alert(phase_name, last_error)
 
                         raise
 
@@ -86,39 +89,168 @@ def _send_to_dlq(phase_name: str, args: tuple, kwargs: dict, error: Exception):
     print(f"[error] Written to dead-letter queue: {filename}")
 
 
-def _send_slack_alert(phase_name: str, error: Exception):
-    """Send critical failure alert to Slack."""
-    webhook_url = os.getenv("SLACK_WEBHOOK_URL", "")
-    if not webhook_url:
-        print("[error] No SLACK_WEBHOOK_URL set — skipping alert")
-        return
+# -----------------------------------------------------------
+# Notion Integration — Pipeline Log
+# -----------------------------------------------------------
 
-    message = {
-        "text": f":rotating_light: *OTA Command — Critical Failure*\n"
-                f"*Phase:* `{phase_name}`\n"
-                f"*Error:* `{str(error)[:500]}`\n"
-                f"*Time:* {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n"
-                f"*Action:* Check dead-letter queue and retry manually.",
+PHASE_MAP = {
+    "01_discovery": "01 Discovery",
+    "01_discovery_api": "01 Discovery",
+    "02_rights_gate": "02 Rights Gate",
+    "03_extraction": "03 Extraction",
+    "04_storage": "04 Storage",
+    "04_storage_github": "04 Storage",
+    "04_storage_drive": "04 Storage",
+    "05_notebooklm": "05 NotebookLM",
+    "06_multiplication": "06 Multiplication",
+    "06_social_copy": "06 Multiplication",
+    "06_blog": "06 Multiplication",
+    "06_newsletter": "06 Multiplication",
+    "06_quotes": "06 Multiplication",
+    "06_thumbnails": "06 Multiplication",
+    "07_production": "07 Production",
+    "07_voiceover": "07 Production",
+    "07_video": "07 Production",
+    "07_clips": "07 Production",
+    "08_qa_gate": "08 QA Gate",
+    "09_distribution": "09 Distribution",
+    "10_analytics": "10 Analytics",
+}
+
+
+def _notion_create_page(properties: dict, content: str = "") -> dict:
+    """Create a page in the OTA Command Pipeline Log database via Notion API."""
+    notion_token = os.getenv("NOTION_API_KEY", "")
+    if not notion_token:
+        print("[notify] No NOTION_API_KEY set — skipping Notion notification")
+        return {}
+
+    # Build Notion API properties
+    notion_props = {}
+
+    if "Event" in properties:
+        notion_props["Event"] = {
+            "title": [{"text": {"content": str(properties["Event"])[:100]}}]
+        }
+    if "Phase" in properties:
+        notion_props["Phase"] = {"select": {"name": properties["Phase"]}}
+    if "Status" in properties:
+        notion_props["Status"] = {"select": {"name": properties["Status"]}}
+    if "Video Title" in properties:
+        notion_props["Video Title"] = {
+            "rich_text": [{"text": {"content": str(properties["Video Title"])[:200]}}]
+        }
+    if "Slug" in properties:
+        notion_props["Slug"] = {
+            "rich_text": [{"text": {"content": str(properties["Slug"])[:100]}}]
+        }
+    if "Video URL" in properties:
+        notion_props["Video URL"] = {"url": properties["Video URL"]}
+    if "Asset Count" in properties:
+        notion_props["Asset Count"] = {"number": properties["Asset Count"]}
+    if "Details" in properties:
+        notion_props["Details"] = {
+            "rich_text": [{"text": {"content": str(properties["Details"])[:2000]}}]
+        }
+
+    body = {
+        "parent": {"database_id": "1373bc60-a288-42cb-9e3b-1611d0c609fe"},
+        "properties": notion_props,
     }
 
-    try:
-        requests.post(webhook_url, json=message, timeout=5)
-        print(f"[error] Slack alert sent for {phase_name}")
-    except Exception as e:
-        print(f"[error] Failed to send Slack alert: {e}")
-
-
-def notify_slack(message: str, emoji: str = ":robot_face:"):
-    """Send a general notification to Slack."""
-    webhook_url = os.getenv("SLACK_WEBHOOK_URL", "")
-    if not webhook_url:
-        return
+    # Add page content if provided
+    if content:
+        body["children"] = [{
+            "object": "block",
+            "type": "paragraph",
+            "paragraph": {
+                "rich_text": [{"text": {"content": content[:2000]}}]
+            }
+        }]
 
     try:
-        requests.post(
-            webhook_url,
-            json={"text": f"{emoji} {message}"},
-            timeout=5,
+        resp = requests.post(
+            "https://api.notion.com/v1/pages",
+            headers={
+                "Authorization": f"Bearer {notion_token}",
+                "Notion-Version": "2022-06-28",
+                "Content-Type": "application/json",
+            },
+            json=body,
+            timeout=10,
         )
-    except Exception:
-        pass
+        if resp.status_code in (200, 201):
+            print(f"[notify] Notion page created: {properties.get('Event', '')}")
+            return resp.json()
+        else:
+            print(f"[notify] Notion API error: {resp.status_code} {resp.text[:200]}")
+            return {}
+    except Exception as e:
+        print(f"[notify] Failed to create Notion page: {e}")
+        return {}
+
+
+def _send_notion_alert(phase_name: str, error: Exception):
+    """Send critical failure alert to Notion Pipeline Log."""
+    phase_label = PHASE_MAP.get(phase_name, phase_name)
+
+    _notion_create_page(
+        properties={
+            "Event": f"CRITICAL FAILURE — {phase_name}",
+            "Phase": phase_label,
+            "Status": "Error",
+            "Details": f"Error: {str(error)[:500]} | Action: Check dead-letter queue and retry manually.",
+        },
+        content=(
+            f"Critical failure in {phase_name}\n\n"
+            f"Error: {str(error)[:1000]}\n\n"
+            f"Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n\n"
+            f"Action: Check queue/dead_letter/ for the failed job and retry."
+        ),
+    )
+    print(f"[error] Notion alert created for {phase_name}")
+
+
+def notify(
+    event: str,
+    phase: str = "",
+    status: str = "Running",
+    video_title: str = "",
+    slug: str = "",
+    video_url: str = "",
+    asset_count: int = None,
+    details: str = "",
+    content: str = "",
+):
+    """
+    Send a pipeline notification to Notion.
+    This is the primary notification function — replaces notify_slack.
+    """
+    phase_label = PHASE_MAP.get(phase, phase) if phase else ""
+
+    props = {"Event": event}
+    if phase_label:
+        props["Phase"] = phase_label
+    if status:
+        props["Status"] = status
+    if video_title:
+        props["Video Title"] = video_title
+    if slug:
+        props["Slug"] = slug
+    if video_url:
+        props["Video URL"] = video_url
+    if asset_count is not None:
+        props["Asset Count"] = asset_count
+    if details:
+        props["Details"] = details
+
+    return _notion_create_page(props, content)
+
+
+# Backward compat alias — any old notify_slack calls still work
+def notify_slack(message: str, emoji: str = ""):
+    """Legacy alias — routes to Notion. Parses message for context."""
+    notify(event=message[:100], details=message)
+
+
+# A Brand Collab Production. All rights reserved 2026.

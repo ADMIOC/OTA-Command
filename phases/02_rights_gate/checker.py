@@ -10,7 +10,7 @@ Pre-flight validation before extraction.
 import requests
 from core.config import get_setting, get_secret
 from core.logging.logger import get_logger
-from core.errors.handler import retry_with_backoff, notify_slack
+from core.errors.handler import retry_with_backoff, notify_slack, notify
 from core.dispatch.events import emit_next_phase, Phase
 
 log = get_logger("02_rights_gate")
@@ -90,25 +90,40 @@ def check_rights(video_id: str, payload: dict) -> dict:
     # Decision
     if results["blocked"]:
         log.error(f"BLOCKED: {results['block_reason']}")
-        notify_slack(
-            f":no_entry: *Video blocked* — {payload.get('title', video_id)}\n"
-            f"Reason: {results['block_reason']}",
+        notify(
+            event="Video blocked",
+            phase="02_rights_gate",
+            status="Blocked",
+            video_title=payload.get('title', video_id),
+            slug=payload.get('slug', video_id),
+            video_url=payload.get('url', f"https://youtube.com/watch?v={video_id}"),
+            details=f"Reason: {results['block_reason']}",
         )
         return None
 
     if not results["license_ok"]:
         log.warn(f"License not in allowed list for {video_id}")
-        notify_slack(
-            f":warning: *License issue* — {payload.get('title', video_id)}\n"
-            f"License type: {license_type}",
+        notify(
+            event="License issue detected",
+            phase="02_rights_gate",
+            status="Blocked",
+            video_title=payload.get('title', video_id),
+            slug=payload.get('slug', video_id),
+            video_url=payload.get('url', f"https://youtube.com/watch?v={video_id}"),
+            details=f"License type: {license_type}. Not in allowed list.",
         )
         return None
 
     if not results["content_id_clear"]:
         log.warn(f"Content ID claim detected on {video_id}")
-        notify_slack(
-            f":warning: *Content ID claim* — {payload.get('title', video_id)}\n"
-            f"Video has licensed/claimed content. Skipping.",
+        notify(
+            event="Content ID claim detected",
+            phase="02_rights_gate",
+            status="Blocked",
+            video_title=payload.get('title', video_id),
+            slug=payload.get('slug', video_id),
+            video_url=payload.get('url', f"https://youtube.com/watch?v={video_id}"),
+            details="Video has licensed/claimed content. Skipping.",
         )
         return None
 
